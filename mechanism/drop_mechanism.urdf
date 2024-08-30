@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<robot name="C:/Users/moise/OneDrive/Documentos/carla_workspace/mechanism/drop_mechanism.urdf" xmlns:xacro="http://ros.org/wiki/xacro">
+  <link name="base_link">
+  </link>
+  <link name="base">
+  </link>
+  <joint name="base_link_base_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="base"/>
+    <origin xyz="0 0 -0.000016" rpy="0 0 0"/>
+  </joint>
+  <joint name="rotational motor" type="continuous">
+    <parent link="base_link"/>
+    <child link="connector"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="10" velocity="10"/>
+    <origin xyz="-0.0011 0.0048 -0.0325" rpy="0 0 0"/>
+  </joint>
+  <link name="connector">
+  </link>
+  <joint name="connector-joint" type="continuous">
+    <parent link="connector"/>
+    <child link="joint"/>
+    <axis xyz="0 1 0"/>
+    <origin xyz="0.0249 0 -0.0001" rpy="3.141593 -1.331593 3.141593"/>
+  </joint>
+  <link name="joint">
+  </link>
+  <joint name="sliderjoint" type="prismatic">
+    <parent link="base_link"/>
+    <child link="pin"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="0.030422 0.00274 -0.008323" rpy="0 0 0"/>
+      </joint>
+  <link name="pin">
+  </link>
+  <link name="motor">
+  </link>
+  <joint name="base_link_motor_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="motor"/>
+    <origin xyz="-0.0015 -0.0174 -0.0223" rpy="0 0 0"/>
+  </joint>
+</robot>
