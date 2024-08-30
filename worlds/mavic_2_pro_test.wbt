@@ -28,8 +28,8 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation 0.032263797809218384 0.0029204169391844168 -0.9994751215091987 3.459543159790136
-  position 0.6368982489658479 -0.15928469137071274 0.2957669589479956
+  orientation 0.14380001313040902 -0.054667594085045755 -0.9880956483967769 3.972576766928218
+  position 3.0287130375279836 -3.0933316585711426 1.4223812954634183
   near 0.2
   follow "Mavic 2 PRO"
   followType "Pan and Tilt Shot"
@@ -360,7 +360,7 @@ Robot {
                   ]
                   name "joint"
                   boundingObject Box {
-                    size 0.033 0.0012 0.008
+                    size 0.033 0.0036 0.008
                   }
                   physics Physics {
                     density -1
@@ -422,7 +422,7 @@ Robot {
             name "pin"
             boundingObject Mesh {
               url [
-                "C:/Users/moise/OneDrive/Documentos/carla_workspace/mechanism/Pin.stl"
+                "https://raw.githubusercontent.com/moiseskim98/drone-search-n-rescue/main/mechanism/Pin.stl"
               ]
             }
             physics Physics {
@@ -478,7 +478,7 @@ Robot {
       name "base"
       boundingObject Mesh {
         url [
-          "C:/Users/moise/OneDrive/Documentos/carla_workspace/mechanism/BASE.stl"
+          "https://raw.githubusercontent.com/moiseskim98/drone-search-n-rescue/main/mechanism/BASE.stl"
         ]
       }
       physics Physics {
