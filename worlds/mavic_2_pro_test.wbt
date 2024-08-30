@@ -28,8 +28,8 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation 0.17871420221910808 -0.3934972565235797 -0.9017877483275117 5.448049107164683
-  position -3.6813665377406752 -3.564228112252782 2.232956686569944
+  orientation 0.032263797809218384 0.0029204169391844168 -0.9994751215091987 3.459543159790136
+  position 0.6368982489658479 -0.15928469137071274 0.2957669589479956
   near 0.2
   follow "Mavic 2 PRO"
   followType "Pan and Tilt Shot"
@@ -352,7 +352,7 @@ Robot {
                       children [
                         CadShape {
                           url [
-                            "C:/Users/moise/OneDrive/Documentos/carla_workspace/mechanism/Joint.obj"
+                            "https://raw.githubusercontent.com/moiseskim98/drone-search-n-rescue/main/mechanism/Joint.obj"
                           ]
                         }
                       ]
@@ -377,7 +377,7 @@ Robot {
                 children [
                   CadShape {
                     url [
-                      "C:/Users/moise/OneDrive/Documentos/carla_workspace/mechanism/Motor connector.obj"
+                      "https://raw.githubusercontent.com/moiseskim98/drone-search-n-rescue/main/mechanism/Motor_connector.obj"
                     ]
                   }
                 ]
@@ -414,7 +414,7 @@ Robot {
                 }
                 geometry Mesh {
                   url [
-                    "C:/Users/moise/OneDrive/Documentos/carla_workspace/mechanism/Pin.stl"
+                    "https://raw.githubusercontent.com/moiseskim98/drone-search-n-rescue/main/mechanism/Pin.stl"
                   ]
                 }
               }
@@ -450,7 +450,7 @@ Robot {
               children [
                 CadShape {
                   url [
-                    "C:/Users/moise/OneDrive/Documentos/carla_workspace/mechanism/MG995 Assembly.obj"
+                    "https://raw.githubusercontent.com/moiseskim98/drone-search-n-rescue/main/mechanism/MG995_Assembly.obj"
                   ]
                 }
               ]
@@ -469,7 +469,7 @@ Robot {
           children [
             CadShape {
               url [
-                "C:/Users/moise/OneDrive/Documentos/carla_workspace/mechanism/BASE.obj"
+                "https://raw.githubusercontent.com/moiseskim98/drone-search-n-rescue/main/mechanism/BASE.obj"
               ]
             }
           ]
