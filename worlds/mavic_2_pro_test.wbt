@@ -1198,6 +1198,9 @@ Robot {
                             width 400
                             height 240
                             near 0.2
+                            recognition Recognition {
+                              segmentation TRUE
+                            }
                           }
                         ]
                       }

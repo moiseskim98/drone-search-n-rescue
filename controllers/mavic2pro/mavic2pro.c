@@ -37,6 +37,7 @@
 #include <webots/keyboard.h>
 #include <webots/led.h>
 #include <webots/motor.h>
+#include <webots/camera_recognition_object.h>
 
 #define SIGN(x) ((x) > 0) - ((x) < 0)
 #define CLAMP(value, low, high) ((value) < (low) ? (low) : ((value) > (high) ? (high) : (value)))
@@ -48,6 +49,8 @@ int main(int argc, char **argv) {
   // Get and enable devices.
   WbDeviceTag camera = wb_robot_get_device("camera");
   wb_camera_enable(camera, timestep);
+  wb_camera_recognition_enable(camera, timestep);
+  wb_camera_recognition_enable_segmentation(camera);
   WbDeviceTag front_left_led = wb_robot_get_device("front left led");
   WbDeviceTag front_right_led = wb_robot_get_device("front right led");
   WbDeviceTag imu = wb_robot_get_device("inertial unit");
@@ -109,11 +112,22 @@ int main(int argc, char **argv) {
   // Variables.
   double target_altitude = 1.0;  // The target altitude. Can be changed by the user.
   double latch_position = 0;
+  const WbCameraRecognitionObject *object;
 
   // Main loop
   while (wb_robot_step(timestep) != -1) {
     const double time = wb_robot_get_time();  // in seconds.
 
+    // Retrieve the number of elements detected by the camera
+    int num_objects = wb_camera_recognition_get_number_of_objects(camera);
+    object = wb_camera_recognition_get_objects(camera);
+    for(int i = 0; i<num_objects; ++i){
+      if(object[i].id>0){
+        // Detecta a la planta
+       printf("id: %d x: %d y: %d\n", object[i].id, object[i].position_on_image[0], object[i].position_on_image[1]);
+      }
+    }
+    
     // Retrieve robot position using the sensors.
     const double roll = wb_inertial_unit_get_roll_pitch_yaw(imu)[0];
     const double pitch = wb_inertial_unit_get_roll_pitch_yaw(imu)[1];
