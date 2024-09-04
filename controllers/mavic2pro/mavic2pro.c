@@ -42,6 +42,25 @@
 #define SIGN(x) ((x) > 0) - ((x) < 0)
 #define CLAMP(value, low, high) ((value) < (low) ? (low) : ((value) > (high) ? (high) : (value)))
 
+
+struct obj_detected_t {
+  double x;
+  double y;
+  double theta_x;
+  double theta_y;
+  char name;
+  double id;
+};
+
+// PID Orientacion
+double kpO = 0.10;
+double kiO = 0.000; 
+double kdO = 0.00000;
+double EO = 0;
+double eO_1 = 0;
+double alfa = 0.5;
+double v0 = 2.5; // max speed
+
 int main(int argc, char **argv) {
   wb_robot_init();
   int timestep = (int)wb_robot_get_basic_time_step();
@@ -113,6 +132,9 @@ int main(int argc, char **argv) {
   double target_altitude = 1.0;  // The target altitude. Can be changed by the user.
   double latch_position = 0;
   const WbCameraRecognitionObject *object;
+  struct obj_detected_t obj;
+  obj.id = 471;
+  double fx, fy;
 
   // Main loop
   while (wb_robot_step(timestep) != -1) {
@@ -121,12 +143,7 @@ int main(int argc, char **argv) {
     // Retrieve the number of elements detected by the camera
     int num_objects = wb_camera_recognition_get_number_of_objects(camera);
     object = wb_camera_recognition_get_objects(camera);
-    for(int i = 0; i<num_objects; ++i){
-      if(object[i].id>0){
-        // Detecta a la planta
-       printf("id: %d x: %d y: %d\n", object[i].id, object[i].position_on_image[0], object[i].position_on_image[1]);
-      }
-    }
+    
     
     // Retrieve robot position using the sensors.
     const double roll = wb_inertial_unit_get_roll_pitch_yaw(imu)[0];
@@ -188,6 +205,56 @@ int main(int argc, char **argv) {
           break;
       }
       key = wb_keyboard_get_key();
+    }
+    
+    for(int i = 0; i<num_objects; ++i){
+      if(object[i].id == obj.id){
+        // Car is id: 471
+        /*
+        printf("id: %d x: %d y: %d size x: %i size y: %i\n", object[i].id, object[i].position_on_image[0], 
+        object[i].position_on_image[1], object[i].size_on_image[0],object[i].size_on_image[1]);
+        */
+        
+        // x focal length
+        fx = 400/(2*atan(0.785/2)); //fov = 0.785, width = 400 pixels
+        // y focal length
+        fy = 240/(2*atan(0.785/2)); //fov = 0.785, height = 240 pixels
+        
+        obj.theta_x = (object[i].position_on_image[0]-400/2)/(400)*0.785;
+        obj.theta_y = (object[i].position_on_image[1]-240/2)/(240)*0.785;
+        
+        obj.x = 1*fx/object[i].size_on_image[0]; //maybe not gonna use it
+        obj.y = 1.2*fy/object[i].size_on_image[1];
+        
+        const double *pos = wb_gps_get_values(gps);
+        const double *north = wb_compass_get_values(compass);
+        double theta = atan2(north[0], north[2]);
+        
+        double x = pos[0];
+        double y = pos[2];
+        //theta = comp;
+        
+        // Controlador PID con acercamiento exponencial
+        double e[2] = {obj.x-x, obj.y-y};
+        double thetag = atan2(e[1],e[0]);
+        // Error de posicion
+        double eP = sqrt(pow(e[0],2)+pow(e[1],2));
+        
+        // Error de orientacion
+        double eO = atan2(sin(thetag-theta),cos(thetag-theta));
+        
+        // Control de velocidad lineal
+        double kP = v0*(1-exp(-alfa*pow(eP,2)))/eP;
+        pitch_disturbance = -1.0*kP*eP;
+        
+        // Control de velocidad angular
+        double eO_D = eO - eO_1;
+        EO = EO + eO;
+        yaw_disturbance = -1.0*(kpO*eO + kiO*EO*timestep/1000.0 + kdO*eO_D*1000.0/timestep);
+        eO_1 = eO;
+        
+        printf("object detected. pitch: %f yaw: %f\n",pitch_disturbance,yaw_disturbance);
+      }
     }
 
     // Compute the roll, pitch, yaw and vertical inputs.
