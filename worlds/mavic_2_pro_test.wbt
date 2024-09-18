@@ -14,6 +14,7 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/trees/protos/Pine.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/trees/protos/Forest.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/solids/protos/SolidTorus.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/humans/pedestrian/protos/Pedestrian.proto"
 
 WorldInfo {
   info [
@@ -28,8 +29,8 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation 0.10070270549251743 0.009481133463541777 -0.9948713852628058 3.110974941714517
-  position 20.373307540753327 0.6637426641977097 4.348354767364255
+  orientation 0.15859293140037523 0.04044907924519028 -0.9865151565475576 2.7470322875493562
+  position 36.36845375942965 6.718958488386862 16.67107427156162
   near 0.2
   follow "Mavic 2 PRO"
   followType "Mounted Shot"
@@ -47,7 +48,7 @@ Floor {
   }
 }
 Solid {
-  translation 0 -0.14 0.11
+  translation 0 -0.17 0.11
   children [
     Shape {
       appearance PBRAppearance {
@@ -183,7 +184,7 @@ Solid {
   }
 }
 Solid {
-  translation 0 0.14 0.11
+  translation 0 0.18 0.11
   children [
     Shape {
       appearance PBRAppearance {
@@ -1604,4 +1605,8 @@ Robot {
     ]
   }
   controller "mavic2pro"
+}
+Pedestrian {
+  translation -1.02981e-06 -17.33 0.26
+  rotation 0 1 0 -1.5707953071795862
 }
