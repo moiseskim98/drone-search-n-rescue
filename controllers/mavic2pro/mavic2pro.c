@@ -43,7 +43,7 @@
 #define CLAMP(value, low, high) ((value) < (low) ? (low) : ((value) > (high) ? (high) : (value)))
 #define ID 1483
 #define EPSILON 0.1
-#define EPSILON_DROP 2.1
+#define EPSILON_DROP 2.2
 
 
 struct obj_detected_t {
