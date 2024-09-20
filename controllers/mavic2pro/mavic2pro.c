@@ -37,9 +37,44 @@
 #include <webots/keyboard.h>
 #include <webots/led.h>
 #include <webots/motor.h>
+#include <webots/camera_recognition_object.h>
 
 #define SIGN(x) ((x) > 0) - ((x) < 0)
 #define CLAMP(value, low, high) ((value) < (low) ? (low) : ((value) > (high) ? (high) : (value)))
+#define ID 1483
+#define EPSILON 0.1
+#define EPSILON_DROP 2.2
+
+
+struct obj_detected_t {
+  double x;
+  double y;
+  double theta_x;
+  double theta_y;
+  char name;
+  double id;
+};
+
+// yaw PID
+double kpOx = 1.50;
+double kiOx = 0.0010; 
+double kdOx = 0.1000;
+double EOx = 0;
+double eO_1x = 0;
+
+// pitch PID
+double kpOy = 5.00;
+double kiOy = 0.010; 
+double kdOy = 0.0001;
+double EOy = 0;
+double eO_1y = 0;
+
+// exponential controller
+double alfa = 0.2;
+double v0 = 2.5; // max speed
+
+int state;
+
 
 int main(int argc, char **argv) {
   wb_robot_init();
@@ -48,6 +83,8 @@ int main(int argc, char **argv) {
   // Get and enable devices.
   WbDeviceTag camera = wb_robot_get_device("camera");
   wb_camera_enable(camera, timestep);
+  wb_camera_recognition_enable(camera, timestep);
+  wb_camera_recognition_enable_segmentation(camera);
   WbDeviceTag front_left_led = wb_robot_get_device("front left led");
   WbDeviceTag front_right_led = wb_robot_get_device("front right led");
   WbDeviceTag imu = wb_robot_get_device("inertial unit");
@@ -109,11 +146,21 @@ int main(int argc, char **argv) {
   // Variables.
   double target_altitude = 1.0;  // The target altitude. Can be changed by the user.
   double latch_position = 0;
+  const WbCameraRecognitionObject *object;
+  struct obj_detected_t obj;
+  obj.id = ID;
+  double fx, fy;
+  state = 0;
 
   // Main loop
   while (wb_robot_step(timestep) != -1) {
     const double time = wb_robot_get_time();  // in seconds.
 
+    // Retrieve the number of elements detected by the camera
+    int num_objects = wb_camera_recognition_get_number_of_objects(camera);
+    object = wb_camera_recognition_get_objects(camera);
+    
+    
     // Retrieve robot position using the sensors.
     const double roll = wb_inertial_unit_get_roll_pitch_yaw(imu)[0];
     const double pitch = wb_inertial_unit_get_roll_pitch_yaw(imu)[1];
@@ -125,56 +172,190 @@ int main(int argc, char **argv) {
     const bool led_state = ((int)time) % 2;
     wb_led_set(front_left_led, led_state);
     wb_led_set(front_right_led, !led_state);
-
-    // Stabilize the Camera by actuating the camera motors according to the gyro feedback.
-    wb_motor_set_position(camera_roll_motor, -0.115 * roll_velocity);
-    wb_motor_set_position(camera_pitch_motor, -0.1 * pitch_velocity);
     
-    // Latch
-    wb_motor_set_position(latch_motor, latch_position);
+    
 
     // Transform the keyboard input to disturbances on the stabilization algorithm.
     double roll_disturbance = 0.0;
     double pitch_disturbance = 0.0;
     double yaw_disturbance = 0.0;
-    int key = wb_keyboard_get_key();
-    while (key > 0) {
-      switch (key) {
-        case WB_KEYBOARD_UP:
-          pitch_disturbance = -2.0;
-          break;
-        case WB_KEYBOARD_DOWN:
-          pitch_disturbance = 2.0;
-          break;
-        case WB_KEYBOARD_RIGHT:
-          yaw_disturbance = -1.3;
-          break;
-        case WB_KEYBOARD_LEFT:
-          yaw_disturbance = 1.3;
-          break;
-        case (WB_KEYBOARD_SHIFT + WB_KEYBOARD_RIGHT):
-          roll_disturbance = -1.0;
-          break;
-        case (WB_KEYBOARD_SHIFT + WB_KEYBOARD_LEFT):
-          roll_disturbance = 1.0;
-          break;
-        case (WB_KEYBOARD_SHIFT + WB_KEYBOARD_UP):
-          target_altitude += 0.05;
-          printf("target altitude: %f [m]\n", target_altitude);
-          break;
-        case (WB_KEYBOARD_SHIFT + WB_KEYBOARD_DOWN):
-          target_altitude -= 0.05;
-          printf("target altitude: %f [m]\n", target_altitude);
-          break;
-        case ('A'):
-          latch_position = 0.5;
-          break;
-        case ('S'):
-          latch_position = 0.0;
-          break;
-      }
-      key = wb_keyboard_get_key();
+    double camera_yaw_disturbance = 0.5;
+    
+    
+    
+    switch (state)
+    {
+      case 0:
+        target_altitude = 8;
+        //double epsilon = 0.1;
+        
+        printf("height: %f\n",altitude);
+        
+        double error = pow(target_altitude - altitude,2);
+        
+        if(error < EPSILON){state=1;}
+        break;
+        
+        
+      case 1:
+        int key = wb_keyboard_get_key();
+        while (key > 0) {
+          switch (key) {
+            case WB_KEYBOARD_UP:
+              pitch_disturbance = -2.0;
+              break;
+            case WB_KEYBOARD_DOWN:
+              pitch_disturbance = 2.0;
+              break;
+            case WB_KEYBOARD_RIGHT:
+              yaw_disturbance = -1.3;
+              break;
+            case WB_KEYBOARD_LEFT:
+              yaw_disturbance = 1.3;
+              break;
+            case (WB_KEYBOARD_SHIFT + WB_KEYBOARD_RIGHT):
+              roll_disturbance = -1.0;
+              break;
+            case (WB_KEYBOARD_SHIFT + WB_KEYBOARD_LEFT):
+              roll_disturbance = 1.0;
+              break;
+            case (WB_KEYBOARD_SHIFT + WB_KEYBOARD_UP):
+              target_altitude += 0.05;
+              printf("target altitude: %f [m]\n", target_altitude);
+              break;
+            case (WB_KEYBOARD_SHIFT + WB_KEYBOARD_DOWN):
+              target_altitude -= 0.05;
+              printf("target altitude: %f [m]\n", target_altitude);
+              break;
+            case ('A'):
+              latch_position = 0.5;
+              break;
+            case ('S'):
+              latch_position = 0.0;
+              break;
+          }
+          key = wb_keyboard_get_key();
+        }
+        
+        /*
+        for(int i = 0; i<num_objects; ++i){
+          printf("id: %d x: %d y: %d size x: %i size y: %i\n", object[i].id, object[i].position_on_image[0], 
+          object[i].position_on_image[1], object[i].size_on_image[0],object[i].size_on_image[1]);
+        }
+        */
+        
+        for(int i = 0; i<num_objects; ++i)
+        {
+          if(object[i].id == obj.id)
+          {
+            state = 2;
+          }
+        }
+        break;
+        
+        
+      case 2:
+        for(int i = 0; i<num_objects; ++i){
+      
+          //printf("id: %d x: %d y: %d size x: %i size y: %i\n", object[i].id, object[i].position_on_image[0], 
+          //object[i].position_on_image[1], object[i].size_on_image[0],object[i].size_on_image[1]);
+         
+          
+          if(object[i].id == obj.id){
+            // Car is id: 468
+            //printf("id: %d x: %d y: %d size x: %i size y: %i\n", object[i].id, object[i].position_on_image[0], 
+            //object[i].position_on_image[1], object[i].size_on_image[0],object[i].size_on_image[1]);
+            
+            
+            // x focal length
+            fx = 400/(2*atan(0.785/2)); //fov = 0.785, width = 400 pixels
+            // y focal length
+            fy = 240/(2*atan(0.785/2)); //fov = 0.785, height = 240 pixels    
+            
+            
+            obj.theta_x = (object[i].position_on_image[0]-400.0/2.0)/(400.0)*0.785;
+            obj.theta_y = (object[i].position_on_image[1]-240.0/2.0)/(240.0)*0.785;
+            
+            obj.x = 1*fx/object[i].position_on_image[0]; //maybe not gonna use it
+            obj.y = 1.2*fy/object[i].position_on_image[1];
+            
+            //const double *pos = wb_gps_get_values(gps);
+            //const double *north = wb_compass_get_values(compass);
+            //double theta = atan2(north[0], north[2]);
+            //double theta_obj = atan2(obj.x, obj.y);
+            
+            //double x = pos[0];
+            //double y = pos[2];
+            //theta = comp;
+            
+            // Exponential controller with PID
+            //double e[2] = {obj.x-x, obj.y-y};
+            double e[2] = {0, obj.y/tan(obj.theta_y+camera_yaw_disturbance)};
+            //double thetag = atan2(e[1],e[0]);
+            
+            // Position error
+            double eP = sqrt(pow(e[0],2)+pow(e[1],2));
+            
+            // Orientation error
+            //double eO = atan2(sin(thetag-theta),cos(thetag-theta));
+            double eOx = obj.theta_x;
+            double eOy = obj.theta_y;
+            
+            // Linear speed controller
+            double kP = v0*(1-exp(-alfa*pow(eP,2)))/eP;
+            pitch_disturbance = -1.0*kP*eP;
+            
+            // Angular speed controller
+            double eO_Dx = eOx - eO_1x;
+            double eO_Dy = eOy - eO_1y;
+            
+            EOx = EOx + eOx;
+            EOy = EOy + eOy;
+            
+            yaw_disturbance = -1.0*(kpOx*eOx + kiOx*EOx*timestep/1000.0 + kdOx*eO_Dx*1000.0/timestep);
+            camera_yaw_disturbance = 1.0*(kpOy*eOy + kiOy*EOy*timestep/1000.0 + kdOy*eO_Dy*1000.0/timestep);
+            
+            eO_1x = eOx;
+            eO_1y = eOy;
+            
+            if(yaw_disturbance > 1.3){yaw_disturbance = 2;}
+            else if (yaw_disturbance < -1.3){yaw_disturbance = -2;}
+            
+            if(camera_yaw_disturbance > 1.5){camera_yaw_disturbance = 1.5;}
+            else if (camera_yaw_disturbance < -1.5){camera_yaw_disturbance = -1.5;}
+            
+            
+            
+            printf("object detected. pitch: %f eP: %f\n",pitch_disturbance, eP);
+            //printf("object detected. pitch: %f yaw: %f roll: %f\n",pitch_disturbance,yaw_disturbance, camera_yaw_disturbance);
+            
+            
+            if(eP<EPSILON_DROP){state=3;}
+    
+          }
+        }
+        
+        break;
+        
+      case 3:
+        
+        latch_position = 0.5;
+        printf("PACKAGE DROP!");
+        state = 1;
+        break;
+      
     }
+    
+    
+    
+    
+    
+    // Stabilize the Camera by actuating the camera motors according to the gyro feedback.
+    wb_motor_set_position(camera_roll_motor, -0.115 * roll_velocity);
+    wb_motor_set_position(camera_pitch_motor, -0.1 * pitch_velocity + camera_yaw_disturbance);
+    
+    // Latch
+    wb_motor_set_position(latch_motor, latch_position);
 
     // Compute the roll, pitch, yaw and vertical inputs.
     const double roll_input = k_roll_p * CLAMP(roll, -1.0, 1.0) + roll_velocity + roll_disturbance;

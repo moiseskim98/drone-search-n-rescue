@@ -14,6 +14,7 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/trees/protos/Pine.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/trees/protos/Forest.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/solids/protos/SolidTorus.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/humans/pedestrian/protos/Pedestrian.proto"
 
 WorldInfo {
   info [
@@ -28,11 +29,11 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation 0.14380001313040902 -0.054667594085045755 -0.9880956483967769 3.972576766928218
-  position 3.0287130375279836 -3.0933316585711426 1.4223812954634183
+  orientation 0.28595618140200496 0.03666477119030242 -0.9575409948777893 2.952284649265267
+  position 2.5382005199829947 0.5704524088415305 2.2190402600828247
   near 0.2
   follow "Mavic 2 PRO"
-  followType "Pan and Tilt Shot"
+  followType "Mounted Shot"
   followSmoothness 0.2
 }
 TexturedBackground {
@@ -47,7 +48,7 @@ Floor {
   }
 }
 Solid {
-  translation 0 -0.14 0.11
+  translation 0 -0.17 0.11
   children [
     Shape {
       appearance PBRAppearance {
@@ -183,7 +184,7 @@ Solid {
   }
 }
 Solid {
-  translation 0 0.14 0.11
+  translation 0 0.18 0.11
   children [
     Shape {
       appearance PBRAppearance {
@@ -246,7 +247,7 @@ CardboardBox {
   rotation 0 0 1 -1.8325953071795862
 }
 TeslaModel3Simple {
-  translation -41.5139 4.34169 0.31
+  translation -22.5448 -12.4517 0.31
   rotation 0 0 1 -0.2618053071795865
 }
 Pine {
@@ -327,7 +328,7 @@ Robot {
             }
           ]
           endPoint Solid {
-            translation 0.0103 0.0048 -0.0326
+            translation 0.01030000000004126 0.0048 -0.032599999995294844
             rotation 0 1 0 0
             children [
               DEF connector-joint HingeJoint {
@@ -336,8 +337,8 @@ Robot {
                   anchor 0.0135 0 0
                 }
                 endPoint DEF joint Solid {
-                  translation 0.0107 -0.001 0.012
-                  rotation 0 -1 0 1.8099999999999998
+                  translation 0.010700000000000006 -0.0009999999999999948 0.012000000000000005
+                  rotation 0 -1 0 1.8099999999999916
                   children [
                     HingeJoint {
                       jointParameters HingeJointParameters {
@@ -404,7 +405,7 @@ Robot {
           jointParameters JointParameters {
           }
           endPoint DEF pin Solid {
-            translation 0.0181 0.00374 -0.0082
+            translation 0.0181 0.00374 -0.008200000000000002
             children [
               Shape {
                 appearance PBRAppearance {
@@ -1195,11 +1196,16 @@ Robot {
                       DEF CAMERA_SLOT Pose {
                         children [
                           Camera {
+                            rotationStep 0.261799
                             width 400
                             height 240
                             near 0.2
+                            recognition Recognition {
+                              segmentation TRUE
+                            }
                           }
                         ]
+                        rotationStep 0.261799
                       }
                     ]
                     name "camera roll"
@@ -1599,4 +1605,8 @@ Robot {
     ]
   }
   controller "mavic2pro"
+}
+Pedestrian {
+  translation -1.02981e-06 -17.33 0.26
+  rotation 0 1 0 -1.5707953071795862
 }
