@@ -20,8 +20,8 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation -0.05678645192844815 0.8390295437144591 0.5411143351008958 0.3439176459519253
-  position 21.179075013105628 46.90431722660946 -9.151704839089271
+  orientation -0.07016047987532321 0.4693241291276611 0.8802342693182464 0.45203673835844865
+  position 21.37604340819675 46.68818126715418 -9.225453666707581
   near 0.2
   follow "Mavic 2 PRO"
   followType "Mounted Shot"
@@ -49,7 +49,8 @@ Solid {
   }
 }
 Solid {
-  translation 23.4 47.27 -9.9
+  translation 23.4 47.3 -9.9
+  rotation 0 0 1 4.692820414042842e-06
   children [
     Shape {
       appearance PBRAppearance {
@@ -93,8 +94,8 @@ DEF WATER Fluid {
   locked TRUE
 }
 RubberDuck {
-  translation 35.1772 97.0988 -10.01084634877399
-  rotation 0.015006234334347663 0.032506182500108616 -0.9993588749945499 0.8654754479327903
+  translation 35.1772 97.0988 -10.01084634877433
+  rotation 0.01500623435821261 0.03250618255171703 -0.999358874992513 0.8654754479343397
   scale 5
   immersionProperties [
     ImmersionProperties {
@@ -153,8 +154,8 @@ DEF UNEVEN_TERRAIN Solid {
   locked TRUE
 }
 Robot {
-  translation 77.12 66.35 -9.51
-  rotation 0 1 0 -1.5707953071795862
+  translation 77.12 66.35 -9.948122740779263
+  rotation 0 -0.9999999999999999 0 1.5707961472168501
   children [
     Group {
     }
@@ -657,8 +658,8 @@ Robot {
   supervisor TRUE
 }
 Robot {
-  translation 23.489000492194773 47.44840029965165 -9.737536392107636
-  rotation -0.04368273999733406 -0.6702811994830428 -0.7408204450782246 0.1822313294181125
+  translation 23.483328766220364 47.45922377672663 -9.737514109739191
+  rotation 0.024160667387487764 -0.9182239907315187 0.39532387354734194 0.13276189259188106
   children [
     DEF DROP_MECHANISM Connector {
       translation -0.05 0 -0.0800157
@@ -666,7 +667,7 @@ Robot {
       children [
         DEF connector HingeJoint {
           jointParameters HingeJointParameters {
-            position 6.065748873124402e-10
+            position 1.1171676175881617e-09
             axis 0 1 0
             anchor -0.0011 0.0048 -0.0325
           }
@@ -681,22 +682,22 @@ Robot {
             }
           ]
           endPoint Solid {
-            translation 0.010300260722738252 0.004799988868949612 -0.03260011563963831
+            translation 0.010300260718900141 0.004799988868949612 -0.0326001160766836
             rotation 0 1 0 0
             children [
               DEF connector-joint HingeJoint {
                 jointParameters HingeJointParameters {
-                  position 3.4155104784532335e-08
+                  position 3.619775777863208e-08
                   axis 0 1 0
                   anchor 0.0135 0 0
                 }
                 endPoint DEF joint Solid {
-                  translation 0.010700000409861223 -0.0010000000000000005 0.012000000095634497
-                  rotation 0 -1 0 1.809999965844878
+                  translation 0.010700000434373054 -0.0010000000000000059 0.012000000101354168
+                  rotation 0 -1 0 1.809999963802225
                   children [
                     HingeJoint {
                       jointParameters HingeJointParameters {
-                        position 1.7895097486789382e-08
+                        position 1.7605919494516906e-08
                       }
                       endPoint SolidReference {
                         solidName "pin"
@@ -758,11 +759,10 @@ Robot {
         }
         DEF pin SliderJoint {
           jointParameters JointParameters {
-            position 9.191066025646771e-06
+            position 9.71405032620669e-06
           }
           endPoint DEF pin Solid {
-            translation 0.018100525930364597 0.0037400716451889693 -0.008190809542882113
-            rotation 0.20920433536849622 0.9614675568916332 -0.17836390640446276 1.1295812266679888e-08
+            translation 0.018100525930364597 0.0037400716451889693 -0.008190286558581554
             children [
               Shape {
                 appearance PBRAppearance {
@@ -778,9 +778,13 @@ Robot {
               }
             ]
             name "pin"
-            boundingObject Mesh {
-              url [
-                "https://raw.githubusercontent.com/moiseskim98/drone-search-n-rescue/main/mechanism/Pin.stl"
+            boundingObject Pose {
+              translation 0 0 0.018
+              children [
+                Cylinder {
+                  height 0.055
+                  radius 0.0026
+                }
               ]
             }
             physics Physics {
@@ -834,11 +838,6 @@ Robot {
         }
       ]
       name "base"
-      boundingObject Mesh {
-        url [
-          "https://raw.githubusercontent.com/moiseskim98/drone-search-n-rescue/main/mechanism/BASE.stl"
-        ]
-      }
       physics Physics {
         density -1
         mass 0.0015
@@ -992,7 +991,7 @@ Robot {
       }
       slowHelix Solid {
         translation -0.177179 0.127453 -0.0320282
-        rotation 0 0 -1 5.912829916272936
+        rotation 0 0 -1 5.615659780954003
         children [
           Shape {
             appearance USE GREY_PLASTIC
@@ -1171,7 +1170,7 @@ Robot {
       }
       slowHelix Solid {
         translation -0.177179 -0.127453 -0.0320282
-        rotation 0 0 -1 1.93096167282444
+        rotation 0 0 -1 1.2385360433432682
         children [
           Shape {
             appearance PBRAppearance {
@@ -1369,7 +1368,7 @@ Robot {
       }
       slowHelix Solid {
         translation 0.0548537 -0.151294 -0.00280468
-        rotation 0 0 -1 0.7928195558938765
+        rotation 0 0 0.9999999999999999 3.721429380307175
         children [
           Shape {
             appearance PBRAppearance {
@@ -1471,7 +1470,7 @@ Robot {
     }
     DEF CAMERA_YAW HingeJoint {
       jointParameters HingeJointParameters {
-        position 7.3806946388630225e-09
+        position 1.0289188883681723e-08
         axis 0 0 1
         anchor 0.0412774 -0.00469654 -0.00405862
       }
@@ -1486,7 +1485,7 @@ Robot {
         }
       ]
       endPoint Solid {
-        translation 0.04127724377762597 -0.004696632099404776 -0.0040594165379488345
+        translation 0.04127724377762624 -0.004696632099405231 -0.0040594165379488345
         children [
           Shape {
             appearance USE METAL_APPEARANCE
@@ -1498,7 +1497,7 @@ Robot {
           }
           DEF CAMERA_PITCH HingeJoint {
             jointParameters HingeJointParameters {
-              position 0.4900647631518765
+              position 0.3105356411670326
               axis 0 1 0
               anchor 0.000625212 -0.00530346 -0.0207448
             }
@@ -1514,7 +1513,7 @@ Robot {
             ]
             endPoint Solid {
               translation 0.000625212 -0.00530346 -0.0207448
-              rotation 0 0.9999999999999999 0 0.49006476315187647
+              rotation 0 1 0 0.3105356411670327
               children [
                 Shape {
                   appearance USE METAL_APPEARANCE
@@ -1526,7 +1525,7 @@ Robot {
                 }
                 DEF CAMERA_ROLL HingeJoint {
                   jointParameters HingeJointParameters {
-                    position 3.035711646561247e-06
+                    position -0.0001500510379659324
                     anchor 0.00754686 0.0160388 -0.00586401
                   }
                   device [
@@ -1541,7 +1540,7 @@ Robot {
                   ]
                   endPoint Solid {
                     translation 0.00754686 0.0160388 -0.00586401
-                    rotation 1 0 0 3.0357436128254093e-06
+                    rotation -0.9999999999999999 0 0 0.00015005103821092081
                     children [
                       Shape {
                         appearance USE METAL_APPEARANCE
@@ -1789,7 +1788,7 @@ Robot {
       }
       slowHelix Solid {
         translation 0.0548537 0.151294 -0.00280468
-        rotation 0 0 1 1.384563891996096
+        rotation 0 0 -1 2.27124812010513
         children [
           Shape {
             appearance PBRAppearance {
@@ -1973,11 +1972,15 @@ Robot {
       -0.088 0 -0.04
     ]
   }
-  controller "mavic2pro"
+  controller "mavic_ardupilot"
+  controllerArgs [
+    "--sitl-address"
+    "172.22.139.211"
+  ]
 }
 Solid {
-  translation 23.48288728645479 47.45360922114236 -9.904208916678353
-  rotation -0.0048129477205007135 -0.03181309752062761 0.9994822471461826 3.052304406789733
+  translation 23.475571646059734 47.46167491591858 -9.904299738494586
+  rotation -0.0119844963333526 -0.019963099399095272 0.9997288865037451 -3.140784153779272
   children [
     SolidTorus {
       translation 0 0 0

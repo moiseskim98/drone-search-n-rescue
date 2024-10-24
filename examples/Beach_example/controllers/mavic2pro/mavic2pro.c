@@ -358,6 +358,7 @@ int main(int argc, char **argv) {
     wb_motor_set_velocity(front_right_motor, -front_right_motor_input);
     wb_motor_set_velocity(rear_left_motor, -rear_left_motor_input);
     wb_motor_set_velocity(rear_right_motor, rear_right_motor_input);
+    printf("v1: %.1f v2: %.1f v3: %.1f v4: %.1f",front_left_motor_input,front_right_motor_input,rear_left_motor_input,rear_right_motor_input);
   };
 
   wb_robot_cleanup();

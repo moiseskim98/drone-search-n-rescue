@@ -29,8 +29,8 @@ WorldInfo {
   }
 }
 Viewpoint {
-  orientation 0.28595618140200496 0.03666477119030242 -0.9575409948777893 2.952284649265267
-  position 2.5382005199829947 0.5704524088415305 2.2190402600828247
+  orientation -0.023921444176223206 0.008098286195837643 -0.9996810402669514 3.1588337688232495
+  position 3.422492601467246 0.07481817045473718 0.42890876263820255
   near 0.2
   follow "Mavic 2 PRO"
   followType "Mounted Shot"
@@ -184,7 +184,7 @@ Solid {
   }
 }
 Solid {
-  translation 0 0.18 0.11
+  translation 0 0.17 0.11
   children [
     Shape {
       appearance PBRAppearance {
@@ -1605,6 +1605,12 @@ Robot {
     ]
   }
   controller "mavic2pro"
+  controllerArgs [
+    "--motors"
+    "front left propeller, front right propeller, rear left propeller, rear right propeller"
+    "--sitl-address"
+    "172.22.139.211"
+  ]
 }
 Pedestrian {
   translation -1.02981e-06 -17.33 0.26

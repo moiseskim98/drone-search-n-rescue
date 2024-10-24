@@ -1,0 +1,88 @@
+# Mavic 2 Pro Custom Parameter File
+
+# Frame Class (1 = Multirotor)
+FRAME_CLASS      1
+
+# Frame Type (1 = X configuration)
+FRAME_TYPE       1
+
+# Initial Arming Checks
+ARMING_CHECK     0  # Enable all pre-arm checks except RC
+
+# Rate Roll PID (Tune based on Mavic 2 Pro performance)
+ATC_RAT_RLL_P    50#0.135
+ATC_RAT_RLL_I    0#.135
+ATC_RAT_RLL_D    0#.003
+
+# Rate Pitch PID (Tune based on Mavic 2 Pro performance)
+ATC_RAT_PIT_P    30#0.135
+ATC_RAT_PIT_I    0#.135
+ATC_RAT_PIT_D    0#.003
+
+# Rate Yaw PID
+ATC_RAT_YAW_P    0#.18
+ATC_RAT_YAW_I    0#.018
+ATC_RAT_YAW_D    0#.0
+
+# Angle control
+ATC_ANG_RLL_P    0.5
+ATC_ANG_PIT_P    0.5
+ATC_ANG_YAW_P    0.5
+
+# Throttle
+MOT_THST_EXPO    72#0.65     # Thrust curve for propeller response
+
+# Motor/ESC settings
+MOT_SPIN_ARM     0.12     # Motor spin at arming
+MOT_SPIN_MIN     0.15     # Minimum throttle while flying
+
+# Thrust curve
+MOT_THST_HOVER   0.5      # Hover throttle at 50% for Mavic 2 Pro-like hover
+
+# Scheduler settings
+SCHED_LOOP_RATE  400      # Main loop rate
+
+# GPS Settings
+GPS_HDOP_GOOD    120      # GPS horizontal dilution of precision for good signal
+
+# Accelerometer Calibration
+INS_GYR_CAL      1        # Enable gyroscope calibration
+
+# Battery Configuration (based on Mavic 2 Pro battery)
+BATT_CAPACITY    3850     # Battery capacity in mAh
+BATT_VOLT_MULT   10.1     # Voltage divider multiplier
+BATT_CURR_MULT   40       # Current sensor multiplier
+BATT_ARM_VOLT    15.0     # Minimum arming voltage (4S LiPo)
+BATT_LOW_VOLT    14.0     # Low battery voltage warning
+
+# Altitude control
+PSC_ACCZ_P       3#0.5
+PSC_ACCZ_I       0#1.0
+
+# Vibration Compensation
+VIBRATION_DAMP   1        # Enable vibration compensation
+
+# EKF Settings
+EK2_ENABLE       1        # Enable EKF2 (Extended Kalman Filter)
+EK3_ENABLE       0        # Disable EKF3 (for stability)
+
+# Autopilot flight modes (Example: stabilize, loiter, guided, auto, RTL)
+FLTMODE1         0        # Stabilize
+FLTMODE2         3        # Auto
+FLTMODE3         5        # Loiter
+FLTMODE4         2        # AltHold
+FLTMODE5         6        # RTL (Return to Launch)
+FLTMODE6         4        # Guided
+
+# Logging
+LOG_BITMASK      655358   # Enable full logging, including RC inputs and IMU
+
+# Gyro filter cutoff frequency
+INS_GYRO_FILTER  20       # Adjust to smooth gyro response
+
+# Other settings
+ARMING_REQUIRE   1        # Require arming to be done
+BRD_SAFETYENABLE 0        # Disable safety switch for simulation purposes
+
+# Miscellaneous
+AHRS_EKF_TYPE    10       # Use simulated AHRS
