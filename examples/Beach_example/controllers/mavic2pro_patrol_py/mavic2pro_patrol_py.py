@@ -41,11 +41,11 @@ class Mavic (Robot):
     # Vertical offset where the robot actually targets to stabilize itself.
     K_VERTICAL_OFFSET = 0.6
     K_VERTICAL_P = 3.0        # P constant of the vertical PID.
-    K_ROLL_P = 4.5           # P constant of the roll PID.
-    K_PITCH_P = 2.5          # P constant of the pitch PID.
-    K_YAW_P = 2.5
+    K_ROLL_P = 40           # P constant of the roll PID.
+    K_PITCH_P = 30          # P constant of the pitch PID.
     
-    MAX_YAW_DISTURBANCE = 0.4
+    
+    MAX_YAW_DISTURBANCE = 1.4
     MAX_PITCH_DISTURBANCE = -1
     # Precision between the target position and the robot position in meters
     target_precision = 0.5
@@ -56,9 +56,9 @@ class Mavic (Robot):
     mode = Mode.DEPLOY
     
     EPSILON = 0.1
-    EPSILON_DROP = 2.2
+    EPSILON_DROP = 15
     
-    target_id = 296
+    target_id = 178
 
     v0 = 2.5
     alfa = 0.2
@@ -70,7 +70,7 @@ class Mavic (Robot):
 
     # pitch PID
     kpOy = 4.00;
-    kiOy = 0.10; 
+    kiOy = 0.010; 
     kdOy = 0.0001;
     
     # Controller
@@ -94,10 +94,10 @@ class Mavic (Robot):
         self.gps.enable(self.time_step)
         self.gyro = self.getDevice("gyro")
         self.gyro.enable(self.time_step)
-        self.front_left_motor = self.getDevice("m1_motor")
-        self.front_right_motor = self.getDevice("m3_motor")
-        self.rear_left_motor = self.getDevice("m4_motor")
-        self.rear_right_motor = self.getDevice("m2_motor")
+        self.front_left_motor = self.getDevice("front left propeller")
+        self.front_right_motor = self.getDevice("front right propeller")
+        self.rear_left_motor = self.getDevice("rear left propeller")
+        self.rear_right_motor = self.getDevice("rear right propeller")
         self.camera_roll_motor = self.getDevice("camera roll")
         self.camera_pitch_motor = self.getDevice("camera pitch")
         self.camera_pitch_motor.setPosition(0)
@@ -125,6 +125,52 @@ class Mavic (Robot):
         
         print("Start the drone\n")
 
+    def flight_planning_algorithm(self, waypoints, verbose_movement=False, verbose_target=False):
+
+        roll, pitch, yaw = self.imu.getRollPitchYaw()
+        x_pos, y_pos, altitude = self.gps.getValues()
+        self.current_pose = [x_pos, y_pos, altitude, roll, pitch, yaw]
+
+
+        if self.target_position[0:2] == [0, 0]:  # Initialization
+            self.target_position[0:2] = waypoints[0]
+            if verbose_target:
+                print("First target: ", self.target_position[0:2])
+
+        # if the robot is at the position with a precision of target_precision
+        if all([abs(x1 - x2) < self.target_precision for (x1, x2) in zip(self.target_position, self.current_pose[0:2])]):
+
+            self.target_index += 1
+            if self.target_index > len(waypoints) - 1:
+                self.target_index = 0
+            self.target_position[0:2] = waypoints[self.target_index]
+            if verbose_target:
+                print("Target reached! New target: ",
+                      self.target_position[0:2])
+
+        # This will be in ]-pi;pi]
+        self.target_position[2] = np.arctan2(
+            self.target_position[1] - self.current_pose[1], self.target_position[0] - self.current_pose[0])
+        # This is now in ]-2pi;2pi[
+        angle_left = self.target_position[2] - self.current_pose[5]
+        # Normalize turn angle to ]-pi;pi]
+        angle_left = (angle_left + 2 * np.pi) % (2 * np.pi)
+        if (angle_left > np.pi):
+            angle_left -= 2 * np.pi
+
+        # Turn the robot to the left or to the right according the value and the sign of angle_left
+        yaw_disturbance = self.MAX_YAW_DISTURBANCE * angle_left / (2 * np.pi)
+        # non proportional and decreasing function
+        pitch_disturbance = clamp(
+            np.log10(abs(angle_left)), self.MAX_PITCH_DISTURBANCE, 0.1)
+
+        if verbose_movement:
+            distance_left = np.sqrt(((self.target_position[0] - self.current_pose[0]) ** 2) + (
+                (self.target_position[1] - self.current_pose[1]) ** 2))
+            print("remaning angle: {:.4f}, remaning distance: {:.4f}".format(
+                angle_left, distance_left))
+        return yaw_disturbance, pitch_disturbance
+
     def move_to_target(self, objects,pitch,yaw,camera):
         """
         Move the robot to the given coordinates
@@ -140,7 +186,6 @@ class Mavic (Robot):
         yaw_disturbance = yaw
         camera_yaw_disturbance = camera
         for object in objects:
-
             if object.getId() == self.target_id:
     
                 try:
@@ -178,8 +223,7 @@ class Mavic (Robot):
                     self.eO_1y = eOy
                     
                     #print("yaw: " + str(yaw_disturbance) + " [" +str(eOx),str(eOy),str(eP)+"]")   
-                    print("pitch : " + str(pitch_disturbance) + " yaw: " + str(yaw_disturbance) + " camera: " + str(camera_yaw_disturbance))
-                    
+                    #print("pitch : " + str(pitch_disturbance) + " yaw: " + str(yaw_disturbance) + " camera: " + str(camera_yaw_disturbance))
                     '''
                     if yaw_disturbance > 1.3:
                         yaw_disturbance = 2
@@ -191,8 +235,9 @@ class Mavic (Robot):
                     elif camera_yaw_disturbance < -0.5:
                         camera_yaw_disturbance = -0.5
                     '''
-       
+
                     if eP<self.EPSILON_DROP:
+                        #print("Hola")
                         self.mode = self.Mode.RELEASE
                 except:
                     e = [0,0]
@@ -209,7 +254,7 @@ class Mavic (Robot):
         previous_message = ""
 
         # Specify the patrol coordinates
-        waypoints = [[-30, 20], [-60, 20], [-60, 10], [-30, 5]]
+        waypoints = [[26, 46], [70, 46], [70, 60], [26, 60]]
         # target altitude of the robot in meters
         self.target_altitude = 1
         while self.step(self.time_step) != -1:
@@ -279,24 +324,30 @@ class Mavic (Robot):
             objects = self.camera.getRecognitionObjects()
             roll, pitch, yaw = self.imu.getRollPitchYaw()
             x_pos, y_pos, altitude = self.gps.getValues()
+            #print("x: " + str(x_pos) + " y: " + str(y_pos))
             roll_acceleration, pitch_acceleration, _ = self.gyro.getValues()
             #self.set_position([x_pos, y_pos, altitude, roll, pitch, yaw])
             
             #for object in objects:
             #    print(str(object.getId()))
 
-            if altitude > self.target_altitude - 1:
+            if(altitude > self.target_altitude - 1) & (self.mode == self.Mode.DEPLOY):
                 # as soon as it reach the target altitude, compute the disturbances to go to the given waypoints.
                 self.mode = self.Mode.FOUND
+                
             
             if self.mode == self.Mode.DEPLOY:
                 if abs(altitude-self.target_altitude)<1:
                     self.mode = self.Mode.FOUND
             elif self.mode == self.Mode.FOUND:
+                yaw_disturbance, pitch_disturbance = self.flight_planning_algorithm(waypoints)
                 pitch_disturbance, yaw_disturbance, camera_pitch_disturbance = self.move_to_target(
-                    objects,pitch_disturbance, yaw_disturbance, camera_pitch_disturbance )
+                    objects,pitch_disturbance, yaw_disturbance, camera_pitch_disturbance)
             elif self.mode == self.Mode.RELEASE:
-                print("it works!")
+                self.latch.setPosition(0.5)
+                _, _, camera_pitch_disturbance = self.move_to_target(
+                    objects,pitch_disturbance, yaw_disturbance, camera_pitch_disturbance)
+
 
             roll_input = self.K_ROLL_P * clamp(roll, -1, 1) + roll_acceleration + roll_disturbance
             pitch_input = self.K_PITCH_P * clamp(pitch, -1, 1) + pitch_acceleration + pitch_disturbance

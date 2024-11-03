@@ -11,12 +11,9 @@ import time
 import socket
 import select
 import struct
-import math
 import numpy as np
 from threading import Thread
-import threading
 from typing import List, Union
-from pymavlink import mavutil
 
 # Here we set up environment variables so we can run this script
 # as an external controller outside of Webots (useful for debugging)
@@ -40,13 +37,6 @@ sys.path.append(f"{WEBOTS_HOME}/lib/controller/python")
 
 from controller import Robot, Camera, RangeFinder # noqa: E401, E402
 
-class Enumerate(object):
-    def __init__(self, names):
-        for number, name in enumerate(names.split()):
-            setattr(self, name, number)
-
-def clamp(value, value_min, value_max):
-    return min(max(value, value_min), value_max)
 
 class WebotsArduVehicle():
     """Class representing an ArduPilot controlled Webots Vehicle"""
@@ -55,50 +45,6 @@ class WebotsArduVehicle():
     controls_struct_size = struct.calcsize(controls_struct_format)
     fdm_struct_format = 'd'*(1+3+3+3+3+3)
     fdm_struct_size = struct.calcsize(fdm_struct_format)
-
-    # Constants, empirically found.
-    K_VERTICAL_THRUST = 72  # with this thrust, the drone lifts.
-    # Vertical offset where the robot actually targets to stabilize itself.
-    K_VERTICAL_OFFSET = 0.6
-    K_VERTICAL_P = 3.0        # P constant of the vertical PID.
-    K_ROLL_P = 50.0           # P constant of the roll PID.
-    K_PITCH_P = 30.0          # P constant of the pitch PID.
-
-    MAX_YAW_DISTURBANCE = 0.4
-    MAX_PITCH_DISTURBANCE = -1
-    # Precision between the target position and the robot position in meters
-    target_precision = 0.5
-    flag_motors = 0
-
-    Mode = Enumerate('DEPLOY AUTOPILOT FOUND RELEASE STOP')
-    #StimeStep = 32
-    maxSpeed = 10.0
-    mode = Mode.DEPLOY
-    
-    EPSILON = 0.1
-    EPSILON_DROP = 2.2
-    
-    target_id = 187
-
-    v0 = 2.5
-    alfa = 0.2
-
-    # yaw PID
-    kpOx = 0.50;
-    kiOx = 0.0000; 
-    kdOx = 0.0001;
-
-    # pitch PID
-    kpOy = 4.00;
-    kiOy = 0.10; 
-    kdOy = 0.0001;
-    
-    # Controller
-    EOx = 0
-    EOy = 0
-    eO_1x = 0
-    eO_1y = 0
-
 
     def __init__(self,
                  motor_names: List[str],
@@ -152,39 +98,27 @@ class WebotsArduVehicle():
         self._uses_propellers = uses_propellers
         self._webots_connected = True
 
-        self._control_msg = None
-        self.message_lock = threading.Lock()
-
         # setup Webots robot instance
         self.robot = Robot()
 
         # set robot time step relative to sim time step
-        self._timestep = 8#int(self.robot.getBasicTimeStep())
+        self._timestep = int(self.robot.getBasicTimeStep())
 
         # init sensors
-        
-        #self.accel = self.robot.getDevice(accel_name)
+        self.accel = self.robot.getDevice(accel_name)
         self.imu = self.robot.getDevice(imu_name)
         self.gyro = self.robot.getDevice(gyro_name)
         self.gps = self.robot.getDevice(gps_name)
 
-        #self.accel.enable(self._timestep)
+        self.accel.enable(self._timestep)
         self.imu.enable(self._timestep)
         self.gyro.enable(self._timestep)
         self.gps.enable(self._timestep)
-
-        self.robot.keyboard.enable(self._timestep)
-        self.keyboard = self.robot.getKeyboard()
-        
-        print("Start the drone\n")
 
         # init camera
         if camera_name is not None:
             self.camera = self.robot.getDevice(camera_name)
             self.camera.enable(1000//camera_fps) # takes frame period in ms
-            self.camera.recognitionEnable(self._timestep)
-            self.camera_roll_motor = self.robot.getDevice("camera roll")
-            self.camera_pitch_motor= self.robot.getDevice("camera pitch")
 
             # start camera streaming thread if requested
             if camera_stream_port is not None:
@@ -211,8 +145,6 @@ class WebotsArduVehicle():
             m.setPosition(float('inf'))
             m.setVelocity(0)
 
-        self.latch = self.robot.getDevice('latch')
-
         # start ArduPilot SITL communication thread
         self._sitl_thread = Thread(daemon=True, target=self._handle_sitl, args=[sitl_address, 9002+10*instance])
         self._sitl_thread.start()
@@ -230,7 +162,7 @@ class WebotsArduVehicle():
         s.bind(('0.0.0.0', port))
 
         # wait for SITL to connect
-        print(f"Listening for ardupilot SITL (I{self._instance}) at {sitl_address}:{port}")
+        print(f"Listening for ardupilot SITL (I{self._instance}) at 127.0.0.1:{port}")
         self.robot.step(self._timestep) # flush print in webots console
 
         while not select.select([s], [], [], 0)[0]: # wait for socket to be readable
@@ -249,13 +181,7 @@ class WebotsArduVehicle():
 
             # send data to SITL port (one lower than its output port as seen in SITL_cmdline.cpp)
             if writable:
-
-                #with self.message_lock:
-                #    if self._control_msg:
-                #        s.sendto(self._control_msg,(sitl_address, port+1))
-                #        self._control_msg = None
                 fdm_struct = self._get_fdm_struct()
-                
                 s.sendto(fdm_struct, (sitl_address, port+1))
 
             # receive data from SITL port
@@ -269,11 +195,9 @@ class WebotsArduVehicle():
                 self._handle_controls(command)
 
                 # wait until the next Webots time step as no new sensor data will be available until then
-                
                 step_success = self.robot.step(self._timestep)
                 if step_success == -1: # webots closed
                     break
-            
 
         # if we leave the main loop then Webots must have closed
         s.close()
@@ -289,8 +213,7 @@ class WebotsArduVehicle():
         # get data from Webots
         i = self.imu.getRollPitchYaw()
         g = self.gyro.getValues()
-        #a = self.accel.getValues()
-        a = [0,0,0]
+        a = self.accel.getValues()
         gps_pos = self.gps.getValues()
         gps_vel = self.gps.getSpeedVector()
 
@@ -340,13 +263,9 @@ class WebotsArduVehicle():
             for m in self._reversed_motors:
                 linearized_motor_commands[m-1] *= -1
 
-        if self.flag_motors == 0:
         # set velocities of the motors in Webots
-            for i, m in enumerate(self._motors):
-                m_velocity = linearized_motor_commands[i] * min(m.getMaxVelocity(), self.motor_velocity_cap)
-
-                with self.message_lock:
-                    m.setVelocity(m_velocity)
+        for i, m in enumerate(self._motors):
+            m.setVelocity(linearized_motor_commands[i] * min(m.getMaxVelocity(), self.motor_velocity_cap))
 
     def _handle_image_stream(self, camera: Union[Camera, RangeFinder], port: int):
         """Stream grayscale images over TCP
@@ -470,166 +389,3 @@ class WebotsArduVehicle():
     def webots_connected(self) -> bool:
         """Check if Webots client is connected"""
         return self._webots_connected
-
-    def move_to_target(self,object,pitch,yaw,camera):
-        """
-        Move the robot to the given coordinates
-        Parameters:
-            waypoints (list): list of X,Y coordinates
-            verbose_movement (bool): whether to print remaning angle and distance or not
-            verbose_target (bool): whether to print targets or not
-        Returns:
-            yaw_disturbance (float): yaw disturbance (negative value to go on the right)
-            pitch_disturbance (float): pitch disturbance (negative value to go forward)
-        """
-        pitch_disturbance = pitch
-        yaw_disturbance = yaw
-        camera_yaw_disturbance = camera
-        try:
-            # Orientation error
-            eOx = (object.getPositionOnImage()[0]-400.0/2.0)/(400.0)*0.785
-            eOy = (object.getPositionOnImage()[1]-240.0/2.0)/(240.0)*0.785
-
-            # Exponential controller with PID
-            # y focal length
-            fy = 240/(2*math.atan(0.785/2)) #fov = 0.785, height = 240 pixels
-        
-            obj_y = 1.2*fy/object.getPositionOnImage()[1];
-            e = [0, obj_y/math.tan(eOy)]
-        
-            # Position error
-            eP = math.sqrt(pow(e[0],2)+pow(e[1],2))
-            
-            
-            # Angular speed controller
-            eO_Dx = eOx - self.eO_1x
-            eO_Dy = eOy - self.eO_1y
-            
-            self.EOx = self.EOx + eOx
-            self.EOy = self.EOy + eOy
-            
-            # Linear speed controller
-            kP = self.v0*(1-math.exp(-self.alfa*pow(eP,2)))/eP
-            
-            pitch_disturbance = -1.0*kP*eP
-            
-            yaw_disturbance = clamp(-1.0*(self.kpOx*eOx + self.kiOx*self.EOx*self._timestep/1000.0 + self.kdOx*eO_Dx*1000.0/self._timestep),-1.3,1.3)
-            camera_yaw_disturbance = clamp(1.0*(self.kpOy*eOy + self.kiOy*self.EOy*self._timestep/1000.0 + self.kdOy*eO_Dy*1000.0/self._timestep),-1.5,1.5)
-            
-            self.eO_1x = eOx
-            self.eO_1y = eOy
-            
-            #print("yaw: " + str(yaw_disturbance) + " [" +str(eOx),str(eOy),str(eP)+"]")   
-            print("pitch : " + str(pitch_disturbance) + " yaw: " + str(yaw_disturbance) + " camera: " + str(camera_yaw_disturbance))
-            
-            '''
-            if yaw_disturbance > 1.3:
-                yaw_disturbance = 2
-            elif yaw_disturbance < -1.3:
-                yaw_disturbance = -2
-            
-            if camera_yaw_disturbance > 1.6:
-                camera_yaw_disturbance = 1.6
-            elif camera_yaw_disturbance < -0.5:
-                camera_yaw_disturbance = -0.5
-            '''
-
-            if eP<self.EPSILON_DROP:
-                self.mode = self.Mode.RELEASE
-        except:
-            e = [0,0]
-        return pitch_disturbance, yaw_disturbance, camera_yaw_disturbance
-
-    def propeller_calculation(self,target_altitude, roll_disturbance=0, pitch_disturbance=0, yaw_disturbance=0):
-
-        # get the data
-        roll, pitch, yaw = self.imu.getRollPitchYaw()
-        x_pos, y_pos, altitude = self.gps.getValues()
-        roll_acceleration, pitch_acceleration, _ = self.gyro.getValues()
-
-        roll_input = self.K_ROLL_P * clamp(roll, -1, 1) + roll_acceleration + roll_disturbance
-        pitch_input = self.K_PITCH_P * clamp(pitch, -1, 1) + pitch_acceleration + pitch_disturbance
-        yaw_input = yaw_disturbance
-        clamped_difference_altitude = clamp(target_altitude - altitude + self.K_VERTICAL_OFFSET, -1, 1)
-        vertical_input = self.K_VERTICAL_P * pow(clamped_difference_altitude, 3.0)
-    
-        front_left_motor_input = self.K_VERTICAL_THRUST + vertical_input - yaw_input + pitch_input - roll_input
-        front_right_motor_input = self.K_VERTICAL_THRUST + vertical_input + yaw_input + pitch_input + roll_input
-        rear_left_motor_input = self.K_VERTICAL_THRUST + vertical_input + yaw_input - pitch_input - roll_input
-        rear_right_motor_input = self.K_VERTICAL_THRUST + vertical_input - yaw_input - pitch_input + roll_input
-
-        motor_input = [front_left_motor_input,front_right_motor_input,rear_left_motor_input,rear_right_motor_input]
-        
-        with self.message_lock:
-            for i in range(4):
-                self._motors[i].setVelocity(clamp(motor_input[i],-100,100))
-
-    
-    def camera_position(self,camera_pitch_disturbance):
-
-        roll_acceleration, pitch_acceleration, _ = self.gyro.getValues()
-
-        # camera position
-        self.camera_roll_motor.setPosition(clamp(-0.115 * roll_acceleration,-0.5,.5))
-        self.camera_pitch_motor.setPosition(clamp(-0.1 * pitch_acceleration + 0.3 + camera_pitch_disturbance,-0.5,1.63))
-
-    def object_identifier(self,object_id=187):
-        objective = None
-        objects = self.camera.getRecognitionObjects()
-        for object in objects:
-            if object_id == object.getId():
-                objective = object
-                break
-        return objective
-    
-    def getTime(self):
-        return self.robot.getTime()
-    
-    def getKeyboard(self):
-        return self.keyboard
-    
-    def modified_flag_motors(self,mode):
-        self.flag_motors = mode
-    
-    def send_mode(self, mode):
-        if mode == "LOITER":
-            msg = bytearray([
-                0xFE,       # Start byte for MAVLink 1.0
-                0x21,       # Payload length (33 bytes for command_long)
-                0x01,       # Sequence number
-                0x01,       # System ID
-                0x01,       # Component ID
-                0xE0,       # Message ID for COMMAND_LONG
-
-                # Payload
-                0x01,       # Target system ID
-                0x01,       # Target component ID
-                0xB0, 0x00, # Command (176 - MAV_CMD_DO_SET_MODE)
-                0x00,       # Confirmation
-                0x04, 0x00, 0x00, 0x00,  # Param1 (mode ID for LOITER)
-                0x00, 0x00, 0x00, 0x00,  # Param2 (unused, set to 0)
-                0x00, 0x00, 0x00, 0x00,  # Param3 (unused, set to 0)
-                0x00, 0x00, 0x00, 0x00,  # Param4 (unused, set to 0)
-                0x00, 0x00, 0x00, 0x00,  # Param5 (unused, set to 0)
-                0x00, 0x00, 0x00, 0x00,  # Param6 (unused, set to 0)
-                0x00, 0x00, 0x00, 0x00,  # Param7 (unused, set to 0)
-                ])
-            
-            # Append checksum to the message
-            msg += calculate_checksum(msg)
-            with self.message_lock:
-                self._control_msg = msg
-        
-
-# MAVLink checksum calculation requires extra CRC for `COMMAND_LONG` (0xE0)
-def calculate_checksum(message):
-    crc_extra = 0xE0
-    checksum = 0xFFFF
-    for byte in message[1:]:  # Skip the start byte (0xFE)
-        tmp = byte ^ (checksum & 0xFF)
-        tmp ^= (tmp << 4) & 0xFF
-        checksum = ((checksum >> 8) ^ (tmp << 8) ^ (tmp << 3) ^ (tmp >> 4)) & 0xFFFF
-    # Add the extra CRC
-    checksum ^= crc_extra
-    return checksum.to_bytes(2, 'little')
-

@@ -8,8 +8,7 @@ AP_FLAKE8_CLEAN
 
 import time
 import argparse
-from ardupilot_library import WebotsArduVehicle
-from pymavlink import mavutil
+from webots_vehicle import WebotsArduVehicle
 
 
 def get_args():
@@ -17,7 +16,7 @@ def get_args():
 
     parser.add_argument("--motors", "-m",
                         type=str,
-                        default="front left propeller, front right propeller, rear left propeller, rear right propeller",
+                        default="m1_motor, m2_motor, m3_motor, m4_motor",
                         help="Comma spaced list of motor names in ardupilot numerical order (ex --motors \"m1,m2,m3, m4\")")
     parser.add_argument("--reversed-motors", "-r",
                         type=str,
@@ -38,7 +37,7 @@ def get_args():
 
     parser.add_argument("--accel",
                         type=str,
-                        default=None,
+                        default="accelerometer",
                         help="Webots accelerometer name")
     parser.add_argument("--imu",
                         type=str,
@@ -55,7 +54,7 @@ def get_args():
 
     parser.add_argument("--camera",
                         type=str,
-                        default="camera",
+                        default=None,
                         help="Webots Camera name (optional)")
     parser.add_argument("--camera-fps",
                         type=int,
@@ -87,7 +86,7 @@ def get_args():
                         help="Drone instance to match the SITL. This allows multiple vehicles")
     parser.add_argument("--sitl-address",
                         type=str,
-                        default="172.22.128.1",
+                        default="127.0.0.1",
                         help="IP address of the SITL (useful with WSL2 eg \"172.24.220.98\")")
 
     return parser.parse_args()
@@ -124,75 +123,5 @@ if __name__ == "__main__":
     # User code (ex: connect via drone kit and take off)
     # ...
 
-    t1 = vehicle.getTime()
-
-    roll_disturbance = 0
-    pitch_disturbance = 0
-    yaw_disturbance = 0
-    camera_pitch_disturbance = 0
-    latch_position = 0
-    previous_message = ""
-
-    # Specify the patrol coordinates
-    waypoints = [[-30, 20], [-60, 20], [-60, 10], [-30, 5]]
-    # target altitude of the robot in meters
-    target_altitude = 10
-
-    while True:
-
-        if vehicle.getTime() > (t1+0.2):
-            t1 = vehicle.getTime()
-            if not vehicle.webots_connected():
-                break
-        # Deal with the pressed keyboard key.
-        keyboard = vehicle.getKeyboard()
-        k = keyboard.getKey()
-        message = ''
-        if k == ord('D'):
-            message = 'deploy'
-        elif k == ord('A'):
-            message = 'autopilot'
-        elif k == ord('S'):
-            message = 'stop'
-        elif k == ord('F'):
-            message = 'found'
-        elif k == 73:
-            message = 'help'
-            vehicle.modified_flag_motors(1)
-        elif k == keyboard.UP:
-            pitch_disturbance = -2.0
-        elif k == keyboard.DOWN:
-            pitch_disturbance = 2.0
-        elif k == keyboard.LEFT:
-            yaw_disturbance = 1.3
-        elif k == keyboard.RIGHT:
-            yaw_disturbance = -1.3
-        elif k == (keyboard.SHIFT + keyboard.UP):
-            target_altitude = target_altitude + 0.05
-        elif k == (keyboard.SHIFT + keyboard.DOWN):
-            target_altitude = target_altitude - 0.05
-        elif k == (keyboard.SHIFT + keyboard.LEFT):
-            roll_disturbance = 1.0
-        elif k == (keyboard.SHIFT + keyboard.RIGHT):
-            roll_disturbance = -1.0
-        elif k == ord('R'):
-            latch_position = 0.5
-        elif k == ord('C'):
-            latch_position = 0.0
-        else:
-            pitch_disturbance = 0
-            yaw_disturbance = 0
-            roll_disturbance = 0
-
-        # Read sensors
-        target = vehicle.object_identifier(296)
-        
-
-        if target is not None:
-            [pitch_disturbance,yaw_disturbance,camera_pitch_disturbance] = vehicle.move_to_target(
-                object,pitch_disturbance,yaw_disturbance,camera_pitch_disturbance)
-            
-            vehicle.propeller_calculation(target_altitude, 0, pitch_disturbance, yaw_disturbance)
-            vehicle.camera_position(camera_pitch_disturbance)
-
-        #time.sleep(1)
+    while vehicle.webots_connected():
+        time.sleep(1)
