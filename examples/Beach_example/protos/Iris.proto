@@ -1,0 +1,503 @@
+# VRML_SIM R2022b utf8
+# Iris drone model. Note that the model is not 1-to-1 with the 
+# real drone as motor/propeller constants were empirically determined.
+
+PROTO Iris [
+  field  SFVec3f     translation     0 0 0
+  field  SFRotation  rotation        0 0 1 0
+  field  SFString    name            "Iris"  # Is `Robot.name`.
+  field  SFString    controller      "void"  # Is `Robot.controller`.
+  field  MFString    controllerArgs  []      # Is `Robot.controllerArgs`.
+  field  SFString    customData      ""      # Is `Robot.customData`.
+  field  SFBool      supervisor      FALSE   # Is `Robot.supervisor`.
+  field  SFBool      synchronization TRUE    # Is `Robot.synchronization`.
+  field  MFNode      extensionSlot   []      # Extends the robot with new nodes in the extension slot.
+]
+{
+  Robot {
+    translation IS translation
+    rotation IS rotation
+    controller IS controller
+    controllerArgs IS controllerArgs
+    customData IS customData
+    supervisor IS supervisor
+    synchronization IS synchronization
+    name IS name
+    children [
+      DEF CAMERA_YAW HingeJoint {
+      jointParameters HingeJointParameters {
+        position 1.0289188883681723e-08
+        axis 0 0 1
+        anchor 0.0412774 -0.00469654 -0.00405862
+      }
+      device [
+        RotationalMotor {
+          name "camera yaw"
+          minPosition -1.7
+          maxPosition 1.7
+        }
+        PositionSensor {
+          name "camera yaw sensor"
+        }
+      ]
+      endPoint Solid {
+        translation 0.04127724377762624 -0.004696632099405231 -0.0040594165379488345
+        children [
+          Shape {
+            appearance USE METAL_APPEARANCE
+            geometry Mesh {
+              url [
+                "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/dji/mavic/protos/Mavic2Pro/meshes/camera_yaw.obj"
+              ]
+            }
+          }
+          DEF CAMERA_PITCH HingeJoint {
+            jointParameters HingeJointParameters {
+              position 0.3105356411670326
+              axis 0 1 0
+              anchor 0.000625212 -0.00530346 -0.0207448
+            }
+            device [
+              RotationalMotor {
+                name "camera pitch"
+                minPosition -0.5
+                maxPosition 1.7
+              }
+              PositionSensor {
+                name "camera pitch sensor"
+              }
+            ]
+            endPoint Solid {
+              translation 0.000625212 -0.00530346 -0.0207448
+              rotation 0 1 0 0.3105356411670327
+              children [
+                Shape {
+                  appearance USE METAL_APPEARANCE
+                  geometry Mesh {
+                    url [
+                      "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/dji/mavic/protos/Mavic2Pro/meshes/camera_pitch.obj"
+                    ]
+                  }
+                }
+                DEF CAMERA_ROLL HingeJoint {
+                  jointParameters HingeJointParameters {
+                    position -0.0001500510379659324
+                    anchor 0.00754686 0.0160388 -0.00586401
+                  }
+                  device [
+                    RotationalMotor {
+                      name "camera roll"
+                      minPosition -0.5
+                      maxPosition 0.5
+                    }
+                    PositionSensor {
+                      name "camera roll sensor"
+                    }
+                  ]
+                  endPoint Solid {
+                    translation 0.00754686 0.0160388 -0.00586401
+                    rotation -0.9999999999999999 0 0 0.00015005103821092081
+                    children [
+                      Shape {
+                        appearance USE METAL_APPEARANCE
+                        geometry Mesh {
+                          url [
+                            "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/dji/mavic/protos/Mavic2Pro/meshes/camera_chassis.obj"
+                          ]
+                        }
+                      }
+                      Shape {
+                        appearance USE GLASS
+                        geometry Mesh {
+                          url [
+                            "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/dji/mavic/protos/Mavic2Pro/meshes/camera_lens.obj"
+                          ]
+                        }
+                      }
+                      DEF CAMERA_SLOT Pose {
+                        children [
+                          Camera {
+                            recognitionColors [
+                              0 0 0
+                            ]
+                            width 400
+                            height 240
+                            near 0.2
+                            recognition Recognition {
+                              segmentation TRUE
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                    name "camera roll"
+                    boundingObject Pose {
+                      translation -0.00915058 -1.86265e-08 -0.000983764
+                      children [
+                        Box {
+                          size 0.0236511 0.0205141 0.0225186
+                        }
+                      ]
+                    }
+                    physics Physics {
+                      density -1
+                      mass 0.0333
+                    }
+                  }
+                }
+              ]
+              name "camera pitch"
+              boundingObject Pose {
+                translation -0.00248347 0.00776876 0.00183829
+                children [
+                  Box {
+                    size 0.0239878 0.0349393 0.0314891
+                  }
+                ]
+              }
+              physics Physics {
+                density -1
+                mass 0.00333
+              }
+            }
+          }
+        ]
+        name "camera yaw"
+        boundingObject Pose {
+          translation -1.86265e-09 -0.00304481 -0.0140589
+          children [
+            Box {
+              size 0.0208626 0.0260333 0.0307844
+            }
+          ]
+        }
+        physics Physics {
+          density -1
+          mass 0.0333
+        }
+      }
+    }
+      DEF DROP_MECHANISM Connector {
+      translation -0.01 0 -0.0600157
+      rotation 0 1 0 1.5708
+      children [
+        DEF connector HingeJoint {
+          jointParameters HingeJointParameters {
+            position 1.1171676175881617e-09
+            axis 0 1 0
+            anchor -0.009 0.0048 -0.0325
+          }
+          device [
+            PositionSensor {
+              name "latch position sensor"
+            }
+            RotationalMotor {
+              name "latch"
+              maxVelocity 576
+              maxTorque 30
+            }
+          ]
+          endPoint Solid {
+            translation 0.010300260718900141 0.004799988868949612 -0.0326001160766836
+            rotation 0 1 0 0
+            children [
+              DEF connector-joint HingeJoint {
+                jointParameters HingeJointParameters {
+                  position 3.619775777863208e-08
+                  axis 0 1 0
+                  anchor 0.0135 0 0
+                }
+                endPoint DEF joint Solid {
+                  translation 0.010700000434373054 -0.001000000000000008 0.012000000101354194
+                  rotation 0 -1 0 1.809999963802225
+                  children [
+                    HingeJoint {
+                      jointParameters HingeJointParameters {
+                        position 1.7605919494516906e-08
+                      }
+                      endPoint SolidReference {
+                        solidName "pin"
+                      }
+                    }
+                    DEF joint Transform {
+                      translation -0.0124 -0.0006 0
+                      scale 0.01 0.01 0.01
+                      children [
+                        CadShape {
+                          url [
+                            "https://raw.githubusercontent.com/moiseskim98/drone-search-n-rescue/main/mechanism/Joint.obj"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                  name "joint"
+                  boundingObject Box {
+                    size 0.033 0.0036 0.008
+                  }
+                  physics Physics {
+                    density -1
+                    mass 0.00184
+                    centerOfMass [
+                      0 0 0
+                    ]
+                  }
+                }
+              }
+              Transform {
+                translation -0.0114 0 0
+                scale 0.01 0.01 0.01
+                children [
+                  CadShape {
+                    url [
+                      "https://raw.githubusercontent.com/moiseskim98/drone-search-n-rescue/main/mechanism/Motor_connector.obj"
+                    ]
+                  }
+                ]
+              }
+            ]
+            name "connector"
+            boundingObject Box {
+              size 0.033 0.004 0.01
+            }
+            physics Physics {
+              density -1
+              mass 0.00132
+              centerOfMass [
+                0 0 0
+              ]
+              inertiaMatrix [
+                1.276e-08 1.3079000000000002e-07 1.2155e-07
+                0 0 0
+              ]
+            }
+          }
+        }
+        DEF pin SliderJoint {
+          jointParameters JointParameters {
+            position 9.71405032620669e-06
+          }
+          endPoint DEF pin Solid {
+            translation 0.018100525930364597 0.0037400716451889693 -0.008190286558581554
+            children [
+              Shape {
+                appearance PBRAppearance {
+                  baseColor 1 0 0
+                  baseColorMap ImageTexture {
+                  }
+                }
+                geometry Mesh {
+                  url [
+                    "https://raw.githubusercontent.com/moiseskim98/drone-search-n-rescue/main/mechanism/Pin.stl"
+                  ]
+                }
+              }
+            ]
+            name "pin"
+            boundingObject Pose {
+              translation 0 0 0.018
+              children [
+                Cylinder {
+                  height 0.055
+                  radius 0.0026
+                }
+              ]
+            }
+            physics Physics {
+              density -1
+              mass 0.0029
+              centerOfMass [
+                0.01809978873285288 0.003802642927310654 0.07259843267559722
+              ]
+              inertiaMatrix [
+                0.00031310523981810433 0.0003312597549665951 1.9934210375770172e-05
+                -3.9920621479081534e-06 -7.621294503526006e-05 -1.6011830281618773e-05
+              ]
+              damping Damping {
+              }
+            }
+          }
+        }
+        DEF motor Connector {
+          translation -0.0015 -0.0174 -0.0223
+          children [
+            Transform {
+              translation 0.0033 0.003 0.0054
+              rotation 0 1 0 -1.5707953071795862
+              scale 0.01 0.01 0.01
+              children [
+                CadShape {
+                  url [
+                    "https://raw.githubusercontent.com/moiseskim98/drone-search-n-rescue/main/mechanism/MG995_Assembly.obj"
+                  ]
+                }
+              ]
+            }
+          ]
+          name "motor(1)"
+          boundingObject Box {
+            size 0.02 0.038 0.04
+          }
+          physics Physics {
+          }
+        }
+        Transform {
+          translation -0.003 -0.0127 -0.0037
+          scale 0.01 0.01 0.01
+          children [
+            CadShape {
+              url [
+                "https://raw.githubusercontent.com/moiseskim98/drone-search-n-rescue/main/mechanism/BASE.obj"
+              ]
+            }
+          ]
+        }
+      ]
+      name "base"
+      physics Physics {
+        density -1
+        mass 0.0015
+        centerOfMass [
+          -0.0036202622616385315 -0.0020969009906165303 0.06812581266825019
+        ]
+        inertiaMatrix [
+          0.0014939731395111197 0.0015227371922886112 4.727853792500915e-05
+          -1.3965774570471177e-06 5.3001679544810975e-05 4.045004077716348e-05
+        ]
+      }
+    }
+      Group {
+        children IS extensionSlot
+      }
+      DEF IRIS_MESH Shape {
+        appearance PBRAppearance {
+          baseColor 0.05 0.05 0.05
+          roughness 1.000000
+          metalness 0.2
+        }
+        geometry Mesh {
+          url "meshes/iris.dae"
+        }
+        castShadows FALSE
+      }
+      Propeller {
+        shaftAxis 0 0 1
+        centerOfThrust 0.130000 -0.220000 0.023000
+        thrustConstants 0.0012 0
+        torqueConstants 5.0e-04 0
+        device RotationalMotor {
+          name "m1_motor"
+          maxVelocity 100
+          maxTorque 30
+          multiplier 1
+        }
+        slowHelix Solid {
+          translation 0.130000 -0.220000 0.023000
+          children [
+            Shape {
+              appearance DEF PROP_BLUE PBRAppearance {
+                baseColor 0 0 0.75
+                metalness 0.3
+              }
+              geometry DEF CCW_PROP Mesh {
+                url [
+                  "meshes/iris_prop_ccw.dae"
+                ]
+              }
+            }
+          ]
+        }
+      }
+      Propeller {
+        shaftAxis 0 0 1
+        centerOfThrust -0.130000 0.200000 0.023000
+        thrustConstants 0.0012 0
+        torqueConstants 5.0e-04 0
+        device RotationalMotor {
+          name "m2_motor"
+          maxVelocity 100
+          maxTorque 30
+          multiplier 1
+        }
+        slowHelix Solid {
+          translation -0.130000 0.200000 0.023000
+          children [
+            Shape {
+              appearance DEF PROP_BLACK PBRAppearance {
+                baseColor 0 0 0
+                metalness 0.3
+              }
+              geometry USE CCW_PROP
+            }
+          ]
+        }
+      }
+      Propeller {
+        shaftAxis 0 0 1
+        centerOfThrust 00.130000 0.220000 0.023000
+        thrustConstants -0.0012 0
+        torqueConstants 5.0e-04 0
+        device RotationalMotor {
+          name "m3_motor"
+          maxVelocity 100
+          maxTorque 30
+          multiplier -1
+        }
+        slowHelix Solid {
+          translation 0.130000 0.220000 0.023000
+          children [
+            Shape {
+              appearance USE PROP_BLUE
+              geometry DEF CW_PROP Mesh {
+                url [
+                  "meshes/iris_prop_cw.dae"
+                ]
+              }
+            }
+          ]
+        }
+      }
+      Propeller {
+        shaftAxis 0 0 1
+        centerOfThrust -0.130000 -0.200000 0.023000
+        thrustConstants -0.0012 0
+        torqueConstants 5.0e-04 0
+        device RotationalMotor {
+          name "m4_motor"
+          maxVelocity 100
+          maxTorque 30
+          multiplier -1
+        }
+        slowHelix Solid {
+          translation -0.130000 -0.200000 0.023000
+          children [
+            Shape {
+              appearance USE PROP_BLACK
+              geometry USE CW_PROP
+            }
+          ]
+        }
+      }
+      Accelerometer {
+      }
+      GPS {
+      }
+      Gyro {
+      }
+      InertialUnit {
+      }
+    ]
+    boundingObject Box {
+       size 0.470000 0.470000 0.110000
+    }
+    physics Physics {
+      density -1
+      mass 1.500000
+      centerOfMass [ 0.000000 0.000000 0.000000 ]
+      inertiaMatrix [
+        2.912500e-02 2.912500e-02 5.522500e-02
+        0.000000e+00 0.000000e+00 0.000000e+00
+      ]
+    }
+  }
+}

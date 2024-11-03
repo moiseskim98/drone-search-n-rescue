@@ -1,0 +1,220 @@
+#VRML_SIM R2023b utf8
+PROTO dropMechanism [
+  
+]
+{
+  DEF dropMechanism Robot {
+    translation 0 0 0.06
+    children [
+      DEF motor Connector {
+        translation -0.0015 -0.0174 -0.0223
+        children [
+          Transform {
+            translation 0.0033 0.003 0.0054
+            rotation 0 1 0 -1.5707953071795862
+            scale 0.01 0.01 0.01
+            children [
+              CadShape {
+                url [
+                  "../mechanism/MG995 Assembly.obj"
+                ]
+              }
+            ]
+          }
+        ]
+        name "motor"
+        boundingObject Box {
+          size 0.02 0.038 0.04
+        }
+        physics Physics {
+        }
+      }
+      DEF pin SliderJoint {
+        jointParameters JointParameters {
+        }
+        endPoint DEF pin Solid {
+          translation 0.0181 0.00374 -0.0082
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 1 0 0
+                baseColorMap ImageTexture {
+                }
+              }
+              geometry Mesh {
+                url [
+                  "../mechanism/Pin.stl"
+                ]
+              }
+            }
+          ]
+          name "pin"
+          boundingObject Mesh {
+            url [
+              "../mechanism/Pin.stl"
+            ]
+          }
+          physics Physics {
+            density -1
+            mass 0.0029
+            centerOfMass [
+              0.01809978873285288 0.003802642927310654 0.07259843267559722
+            ]
+            inertiaMatrix [
+              0.00031310523981810433 0.0003312597549665951 1.9934210375770172e-05
+              -3.9920621479081534e-06 -7.621294503526006e-05 -1.6011830281618773e-05
+            ]
+            damping Damping {
+            }
+          }
+        }
+      }
+      DEF connector HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 0 1 0
+          anchor -0.0011 0.0048 -0.0325
+        }
+        device [
+          PositionSensor {
+            name "latch position sensor"
+          }
+          RotationalMotor {
+            name "latch"
+            maxVelocity 576
+            maxTorque 30.0
+          }
+        ]
+        endPoint Solid {
+          translation 0.0103 0.0048 -0.0326
+          rotation 0 1 0 0
+          children [
+            DEF connector-joint HingeJoint {
+              jointParameters HingeJointParameters {
+                axis 0 1 0
+                anchor 0.0135 0 0
+              }
+              endPoint DEF joint Solid {
+                translation 0.0107 -0.001 0.012
+                rotation 0 -1 0 1.8099999999999998
+                children [
+                  HingeJoint {
+                    jointParameters HingeJointParameters {
+                    }
+                    endPoint SolidReference {
+                      solidName "pin"
+                    }
+                  }
+                  DEF joint Transform {
+                    translation -0.0124 -0.0006 0
+                    scale 0.01 0.01 0.01
+                    children [
+                      CadShape {
+                        url [
+                          "../mechanism/Joint.obj"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+                name "joint"
+                boundingObject Box {
+                  size 0.033 0.0012 0.008
+                }
+                physics Physics {
+                  density -1
+                  mass 0.00184
+                  centerOfMass [
+                    0 0 0
+                  ]
+                }
+              }
+            }
+            Transform {
+              translation -0.0114 0 0
+              scale 0.01 0.01 0.01
+              children [
+                CadShape {
+                  url [
+                    "../mechanism/Motor connector.obj"
+                  ]
+                }
+              ]
+            }
+          ]
+          name "connector"
+          boundingObject Box {
+            size 0.033 0.004 0.01
+          }
+          physics Physics {
+            density -1
+            mass 0.00132
+            centerOfMass [
+              0 0 0
+            ]
+            inertiaMatrix [
+              1.276e-08 1.3079000000000002e-07 1.2155e-07
+              0 0 0
+            ]
+          }
+        }
+      }
+      DEF base Connector {
+        translation 0 0 -1.5680463327602534e-05
+        children [
+          Transform {
+            translation -0.003 -0.0127 -0.0037
+            scale 0.01 0.01 0.01
+            children [
+              CadShape {
+                url [
+                  "../mechanism/BASE.obj"
+                ]
+              }
+            ]
+          }
+        ]
+        name "base"
+        boundingObject Mesh {
+          url [
+            "../mechanism/BASE.stl"
+          ]
+        }
+        physics Physics {
+          density -1
+          mass 0.0015
+          centerOfMass [
+            -0.0036202622616385315 -0.0020969009906165303 0.06812581266825019
+          ]
+          inertiaMatrix [
+            0.0014939731395111197 0.0015227371922886112 4.727853792500915e-05
+            -1.3965774570471177e-06 5.3001679544810975e-05 4.045004077716348e-05
+          ]
+        }
+      }
+    ]
+    name "drop_mechanism"
+    boundingObject Mesh {
+      url [
+        "../mechanism/BASE.stl"
+      ]
+    }
+    physics Physics {
+      density -1
+      mass 0.0037346774454997594
+      centerOfMass [
+        -0.0036202622616384604 -0.0020969009906165303 0.06814149313157804
+      ]
+      inertiaMatrix [
+        0.0003721267861698821 0.00037928841677983263 1.177133928298283e-05
+        -3.4771775531515216e-07 1.3200518635767832e-05 1.0073646282871109e-05
+      ]
+    }
+    controller IS controller
+    controllerArgs IS controllerArgs
+    window IS window
+    customData IS customData
+    supervisor IS supervisor
+    synchronization IS synchronization
+    battery IS battery
+  }
+}
