@@ -10,5 +10,6 @@ The modules built for the drone are:
   nerv
   gripper for carrying a payload
 
+![image](https://github.com/user-attachments/assets/ee95b53f-9c48-40e9-b865-41415b8e734f)
 
 Slide for the project:https://www.canva.com/design/DAGVBoA6hbM/Ai6BIfBj4ClON4PuPVQ88Q/edit
