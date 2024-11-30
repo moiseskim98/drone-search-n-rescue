@@ -9,3 +9,6 @@ The modules built for the drone are:
   speech recognition for "yes" and "no"
   nerv
   gripper for carrying a payload
+  ![Uploading image.png…]()
+
+Slide for the project:https://www.canva.com/design/DAGVBoA6hbM/Ai6BIfBj4ClON4PuPVQ88Q/edit
